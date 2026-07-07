@@ -1,0 +1,33 @@
+{
+  "_comment": "Trigger eval for config-auditor itself (used to measure the Trigger dimension and unlock the 10 that inspection caps at 9). 'trigger' = the auditor SHOULD fire: audit / review / score / harden / evaluate of EXISTING skills, agents, plugins, hooks, MCP, or settings. 'no-trigger' = HARD near-misses that share the same domain vocabulary (skill, plugin, hook, MCP, agent) but are authoring / explaining / using / lifecycle / debugging-ops, NOT auditing. Labels are kept unambiguous on purpose — the discriminating power is in the no-trigger set. Run from an authenticated terminal (claude -p must work); this makes real model calls and costs tokens.",
+  "queries": [
+    {"q": "audit my skills", "expect": "trigger"},
+    {"q": "review my agents for quality issues", "expect": "trigger"},
+    {"q": "score my skills against best practices", "expect": "trigger"},
+    {"q": "check the quality of my Claude Code skills", "expect": "trigger"},
+    {"q": "audit my plugin before I publish it", "expect": "trigger"},
+    {"q": "review my plugins for security problems", "expect": "trigger"},
+    {"q": "check my hooks for anything dangerous", "expect": "trigger"},
+    {"q": "audit the MCP servers in my config", "expect": "trigger"},
+    {"q": "review my Claude Code settings and permissions", "expect": "trigger"},
+    {"q": "are my subagents any good? evaluate them", "expect": "trigger"},
+    {"q": "harden my skills and tell me what is wrong with them", "expect": "trigger"},
+    {"q": "run a read-only audit of everything in ~/.claude", "expect": "trigger"},
+    {"q": "is my SKILL.md well written? grade it", "expect": "trigger"},
+    {"q": "find security problems in my agent definitions", "expect": "trigger"},
+    {"q": "give my plugin a quality scorecard before release", "expect": "trigger"},
+
+    {"q": "create a new skill for deploying to staging", "expect": "no-trigger"},
+    {"q": "write a plugin that connects to Jira", "expect": "no-trigger"},
+    {"q": "explain how Claude Code hooks work", "expect": "no-trigger"},
+    {"q": "build an MCP server for my Postgres database", "expect": "no-trigger"},
+    {"q": "add a PreToolUse hook that blocks rm -rf", "expect": "no-trigger"},
+    {"q": "how do I write a good skill description?", "expect": "no-trigger"},
+    {"q": "fix the failing test in my skill's python script", "expect": "no-trigger"},
+    {"q": "install the github plugin from the marketplace", "expect": "no-trigger"},
+    {"q": "what skills do I have installed?", "expect": "no-trigger"},
+    {"q": "convert my slash command into a skill", "expect": "no-trigger"},
+    {"q": "why is my MCP server failing to connect?", "expect": "no-trigger"},
+    {"q": "generate a hook that formats my code on save", "expect": "no-trigger"}
+  ]
+}

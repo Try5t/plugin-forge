@@ -114,9 +114,24 @@ Restart the session (or `/reload-plugins`) to apply. Updates are never automatic
 
 Two dimensions — Trigger and Execution — cap at 9 by inspection; the 10th point needs a
 real measurement. `scripts/trigger_eval.py` measures a skill's held-out trigger rate via
-`claude -p` against a labeled eval set. It is **not** part of the read-only audit and
-makes real model calls — run `trigger_eval.py --dry-run` first to preview the cost, and
-run it only on explicit approval. (Config-component kinds are not measured this way —
+`claude -p` against a labeled eval set (should-trigger + hard should-not-trigger
+near-misses), reporting recall + false-trigger rate. A 10 needs recall ≥ 0.95 **and**
+false-trigger ≤ 0.05. It is **not** part of the read-only audit and makes real model
+calls. If any call fails (e.g. auth), it aborts without a score rather than fabricating
+one — so it must run from a terminal where Claude Code is authenticated (a plain
+`claude -p "hi"` must work), not inside a nested agent/sandbox session.
+
+To measure this plugin's own Trigger dimension, a labeled eval set ships at
+`tests/fixtures/config-auditor-evalset.json` and a runner resolves the paths for you:
+
+```bash
+py -3 scripts/run_trigger_eval.py         # dry-run: preview the cost (no calls)
+py -3 scripts/run_trigger_eval.py --go    # real run (COSTS TOKENS)
+```
+
+`trigger_eval.py` is a single-skill judge approximation — evidence, not proof. For true
+selection under competition with your other skills, use skill-creator's `run_loop.py`.
+(Config-component kinds — hooks, MCP/LSP, monitors, settings — are not measured this way;
 they are graded on security posture, so a clean one earns a 10 by inspection.)
 
 ## Requirements
