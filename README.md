@@ -6,7 +6,7 @@ A private marketplace of Claude Code plugins and agents.
 
 | Plugin | What it does |
 |---|---|
-| [`skill-auditor`](plugins/skill-auditor/) | Read-only auditor for Claude Code skills and agents — weighted rubric, hard severity gates, four specialist analyst subagents, prioritized report. |
+| [`config-auditor`](plugins/config-auditor/) | Read-only auditor for Claude Code skills, agents, and whole plugins (hooks, MCP/LSP servers, monitors, commands, settings) — weighted rubric, hard severity gates, five specialist analyst subagents, prioritized report. |
 | [`concept-review`](plugins/concept-review/) | Evidence-based concept-phase pipeline — a Conductor drives 12 specialist sub-agents (product, research, architecture, UX, feasibility, QA, red-team critique, scope-and-value challenge, …) through a gated, dependency-ordered chain to a Go/No-Go decision. |
 
 ## Install
@@ -18,7 +18,7 @@ Add the marketplace once, then install any plugin from it:
 claude plugin marketplace add https://gitlab.com/Try5t/plugin-forge.git
 
 # Then install either plugin:
-claude plugin install skill-auditor@plugin-forge
+claude plugin install config-auditor@plugin-forge
 claude plugin install concept-review@plugin-forge
 ```
 

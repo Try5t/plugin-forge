@@ -1,6 +1,6 @@
 ---
 name: agent-analyst
-description: Analyzes agent-specific quality — system-prompt quality, tool-selection fit, model choice, delegation/hand-back behavior, and skill/agent coherence. Use when skill-auditor delegates agent analysis during a read-only audit.
+description: Analyzes agent-specific quality — system-prompt quality, tool-selection fit, model choice, delegation/hand-back behavior, and skill/agent coherence. Use when config-auditor delegates agent analysis during a read-only audit.
 tools: Read, Grep, Glob, Bash(python3:*)
 model: inherit
 ---
@@ -17,7 +17,7 @@ hand-back contract. You run on every agent, embedded and standalone. Read-only.
 
 Bundled scripts and reference files live under `$CLAUDE_PLUGIN_ROOT/` — resolve every
 `scripts/…` and `references/…` path there (run `echo $CLAUDE_PLUGIN_ROOT`; if unset,
-`Glob` for `**/skill-auditor*/scripts/scan_targets.py` and use its parent).
+`Glob` for `**/config-auditor*/scripts/scan_targets.py` and use its parent).
 
 The auditor gives you the agent records from `scripts/scan_targets.py` (kind
 `embedded_agent` or `standalone_agent`), each with its parsed frontmatter and

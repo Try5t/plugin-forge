@@ -37,13 +37,19 @@ def read_body(md_path: Path) -> str:
     return parts[2] if len(parts) == 3 else text
 
 
+def _has_manifest(d: Path) -> bool:
+    return (d / ".claude-plugin" / "plugin.json").is_file() or (d / "plugin.json").is_file()
+
+
 def _is_plugin(target_dir: Path) -> bool:
-    """True if the skill sits inside a Claude Code plugin (which DOES register its
-    bundled agents). Checks the skill dir and a few ancestors for a manifest."""
-    for d in [target_dir, *list(target_dir.parents)[:3]]:
-        if (d / ".claude-plugin" / "plugin.json").is_file() or (d / "plugin.json").is_file():
-            return True
-    return False
+    """True only if the skill is packaged where a Claude Code plugin actually
+    REGISTERS skills: `<plugin>/skills/<name>/SKILL.md`, with the plugin manifest
+    at the plugin root. Merely sitting *somewhere* inside a plugin repo (e.g. under
+    `tests/fixtures/` or `examples/`) does NOT count — such a skill is never loaded,
+    so its embedded agents are still phantom. Checking for any manifest in the
+    ancestor chain would false-negative every skill nested anywhere in a plugin."""
+    parent = target_dir.parent
+    return parent.name == "skills" and _has_manifest(parent.parent)
 
 
 def _agent_registered(stem: str) -> bool:

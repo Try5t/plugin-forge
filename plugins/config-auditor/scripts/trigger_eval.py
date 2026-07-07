@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""OPT-IN trigger-reliability eval for skill-auditor. COSTS TOKENS.
+"""OPT-IN trigger-reliability eval for config-auditor. COSTS TOKENS.
 
-This is the ONLY skill-auditor script that makes real model calls (via `claude
+This is the ONLY config-auditor script that makes real model calls (via `claude
 -p`). It is NOT part of the read-only Phase-1 audit; run it deliberately, only on
 explicit approval, and always show the cost first. It measures how reliably a
 skill's DESCRIPTION selects it: for a labeled set of queries (should-trigger plus

@@ -1,4 +1,4 @@
-# skill-auditor — Changelog
+# config-auditor — Changelog
 
 ## 1.1.0 — 2026-07-07
 
@@ -11,12 +11,12 @@ no script changes.
 
 ## Update — 2026-07-05
 
-Drop-in update for `~/.claude/skills/skill-auditor/`. Read-only analysis skill; no
+Drop-in update for `~/.claude/skills/config-auditor/`. Read-only analysis skill; no
 runtime dependencies (no PyYAML needed). After copying the files in, restart Claude
 Code. On Windows, run the scripts with `py -3` if a bare `python`/`python3` resolves
 to the Microsoft Store stub.
 
-> **If you have the "Fix skill-auditor frontmatter/path parsing bugs" task open:**
+> **If you have the "Fix config-auditor frontmatter/path parsing bugs" task open:**
 > both bugs it describes (the folded-scalar YAML parser and the Windows
 > path-separator false positives) are **already fixed in this version** — you can
 > dismiss that task and use these files.
@@ -104,7 +104,7 @@ the official Claude Code / Agent Skills documentation and corrected:
 - **Measurability honesty.** For skills that can't be benchmarked
   (`disable-model-invocation`, interactive/gated), the accepted evidence is one
   real end-to-end run vs. a known-good baseline (n=1), not a faked number.
-- **Naming.** The skill is `skill-auditor` (the name reflects the read-only-audit
+- **Naming.** The skill is `config-auditor` (the name reflects the read-only-audit
   default; the fix / measure step is the opt-in Phase 2). No stray old names remain.
 
 ### New: opt-in trigger measurement (unlocks the Trigger/Execution 10)

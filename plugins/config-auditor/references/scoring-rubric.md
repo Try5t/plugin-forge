@@ -39,6 +39,26 @@ Applies to agents additionally:
   model — a clear misconfiguration. Flag as BLOCKER only when the mismatch is
   unambiguous; otherwise treat as a MAJOR model-choice finding.
 
+Applies to plugin config components (hooks, monitors, MCP/LSP servers, commands,
+settings) — any one forces the component (and the plugin that ships it) to **F**.
+These are the deterministic gates the `check_hooks.py` / `check_mcp.py` /
+`check_manifest.py` scripts emit; each still passes through verdict adjudication.
+
+- **Hook / monitor / command `!`-block**: fetch-and-execute (`curl … | bash`),
+  reverse shell, credential-path read + network egress, `ANTHROPIC_BASE_URL` /
+  API-key override, or a destructive pattern in the command. A `SessionStart`/
+  `Setup` hook with a network side effect (the CVE-2025-59536 pre-trust class) is
+  a gate on sight.
+- **Command**: `$ARGUMENTS`/`$N` interpolated into a `` !`…` `` shell block without a
+  provable constraint (command injection, CWE-78).
+- **MCP / LSP server**: plaintext secret in `env`/`headers` of a committed config
+  (MCP01); fetch-and-execute as the launch command (MCP05).
+- **Settings**: `defaultMode: bypassPermissions`/auto in a shared or plugin config;
+  `ANTHROPIC_BASE_URL`/key redirect in `env`; a plaintext secret; an over-broad
+  `allow` grant that green-lights a destructive pattern.
+- **Manifest**: a hard load error (e.g. `keywords` not an array); a plaintext secret
+  in the manifest.
+
 ## Stage 2 — Weighted dimensions
 
 Each dimension is scored 0–10 by the responsible subagent (or inline), backed by
@@ -97,6 +117,36 @@ read-only Phase-1 audit — it is offered, and only run on explicit approval.
 | 3 | Tool selection fit | 20% | Toolset matches the role (least-privilege); nothing superfluous, nothing missing for the stated job |
 | 4 | Model choice | 15% | Judgment work on a capable model, mechanical work on a cheap one; `inherit` used when appropriate |
 | 5 | Delegation / hand-back behavior | 15% | Reports cleanly to the caller; context isolation set sensibly; does not silently swallow results |
+
+### Config-component kinds (plugins and their surface)
+
+Hooks, monitors, MCP/LSP servers, and settings are not instruction-authoring
+artifacts like skills and agents — they are *configuration*, graded almost entirely
+on **security posture and least-privilege**, not on trigger or prose quality. They
+are gate-dominated: most of the score is pass/fail, and a clean component is simply
+one with no confirmed findings. A **command** is the exception — it *is* a skill
+(officially merged), so it uses the skills table above **plus** the command gates.
+
+| Kind | Dimension | Weight | What it measures |
+|------|-----------|--------|------------------|
+| **hook / monitor** | Guardrails / no-dangerous-pattern | 60% | none of the gate patterns; command is not fetch-and-execute / reverse-shell / credential-egress |
+| | Least-privilege scope | 25% | narrow matcher; exec-form over shell-form; no `async` persistence; scoped `if` not relied on |
+| | Hygiene | 15% | `timeout` set; http handler constrained by `allowedHttpHookUrls`/`httpHookAllowedEnvVars` |
+| **mcp_server / lsp_server** | Secrets & execution safety | 50% | no plaintext secret in `env`/`headers`; not fetch-and-execute |
+| | Supply-chain pinning | 30% | pinned version, not `@latest`/`-y`-unpinned (rug-pull surface) |
+| | Least-privilege & transport | 20% | `https://` not `http://`; scoped filesystem/db roots; provenance known |
+| **plugin (container)** | Manifest hygiene | 30% | valid `name`, `version` pinned, `keywords` typed, passes `validate --strict` |
+| | Provenance | 30% | trusted source; pinned `dependencies`; `defaultEnabled:false` when it bundles risky surface |
+| | Aggregate component safety | 40% | the plugin inherits the **worst grade among its components** — one BLOCKER child fails the plugin |
+| **settings** | Permission/env posture | 100% | no bypass mode in shared config; no credential/base-URL redirect; least-privilege `allow`/`deny`; scoped `additionalDirectories` |
+
+**Scoring these:** start at 10 per dimension and subtract for each CONFIRMED finding
+(BLOCKER → gate to F; MAJOR → −3 to −5; MINOR → −1). A component with no findings
+scores 10s and grades A. The **measured ceiling does not apply** — these are not
+trigger/execution dimensions, so a clean config component *can* earn a 10 by
+inspection. The plugin container's "aggregate component safety" is mechanical: take
+the minimum grade across every hook, MCP server, monitor, LSP server, command, and
+skill/agent the plugin ships.
 
 ## Stage 3 — Grade bands
 
@@ -158,8 +208,13 @@ issues separately from single-target ones:
 
 - `skill-level` — a property of one skill.
 - `agent-level` — a property of one agent (embedded or standalone).
+- `surface-level` — a property of one plugin surface component: a hook, monitor,
+  MCP/LSP server, command, or settings posture.
+- `plugin-level` — a property of the plugin container: manifest hygiene, provenance,
+  or the aggregate safety of everything it bundles.
 - `coherence-level` — a mismatch between a skill and its embedded agent (e.g. the
-  skill promises a capability the embedded agent lacks the tools to perform).
+  skill promises a capability the embedded agent lacks the tools to perform), or
+  between a plugin's manifest and what it actually ships.
 - `cross-scope-level` — the same skill/agent exists in both global and repo scope
   with diverging content, or two agents have overlapping descriptions that
   compete for the same delegation.

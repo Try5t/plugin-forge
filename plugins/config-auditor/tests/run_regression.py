@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression checks for the skill-auditor scripts (read-only).
+"""Regression checks for the config-auditor scripts (read-only).
 
 Run from anywhere:  python run_regression.py   (use `py -3` on Windows if the
 bare `python`/`python3` resolve to the Microsoft Store stub.)

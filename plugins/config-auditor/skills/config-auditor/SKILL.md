@@ -1,10 +1,11 @@
 ---
-name: skill-auditor
-description: This skill should be used when the user asks to "audit my skills", "review my skills", "improve my skills", "score my skills", "check skill quality", "supercharge my skills", "audit my agents", "review my subagents", or mentions evaluating skills or agents in ~/.claude or a repo's .claude directory. Performs a strictly READ-ONLY audit of all skills and agents (global and repo-local, embedded and standalone) and returns a prioritized scorecard with severity-graded findings and concrete recommendations. It does NOT modify any skill or agent until the user explicitly approves specific recommendations. Use it whenever the user wants their skills or agents evaluated, hardened, or made more reliable, even if they don't say the word "audit".
-allowed-tools: Read, Grep, Glob, Bash(python3:*), Bash(python:*), Bash(gitleaks:*), Task
+name: config-auditor
+description: This skill should be used when the user asks to "audit my skills", "review my skills", "improve my skills", "score my skills", "check skill quality", "supercharge my skills", "audit my agents", "review my subagents", "audit my plugin", "review my plugins", "check my hooks", "audit my MCP servers", "review my settings", or mentions evaluating skills, agents, or plugins in ~/.claude or a repo's .claude directory. Performs a strictly READ-ONLY audit of skills, agents, and whole plugins (including their hooks, monitors, MCP/LSP servers, commands, and settings posture) and returns a prioritized scorecard with severity-graded findings and concrete recommendations. It does NOT modify anything until the user explicitly approves specific recommendations. Use it whenever the user wants their skills, agents, or plugins evaluated, hardened, or made more reliable, even if they don't say the word "audit".
+argument-hint: "[skills|agents|commands|plugins|surface|all] [global|repo|<name>]"
+allowed-tools: Read, Grep, Glob, Bash(python3:*), Bash(python:*), Bash(py:*), Bash(gitleaks:*), AskUserQuestion, Task
 ---
 
-# Skill Auditor
+# Config Auditor
 
 A read-only auditor for Claude Code skills and agents. It scans every skill and
 agent it can find, scores each against a weighted rubric, applies hard severity
@@ -54,15 +55,68 @@ Four discovery roots plus embedded agents:
 4. `.claude/agents/` — repo-local standalone agents
 5. `agents/` subdirectories inside any discovered skill — embedded agents
 
-The scan covers all of them by default. If the user scopes it ("just this repo",
-"only global", "only the wissora skill"), honor that scope.
+**Plugins and their surface** (via `scan_targets.py --plugins`): any
+`.claude-plugin/plugin.json` under the plugin roots, and every component it
+bundles — **hooks** (`hooks/hooks.json` + inline), **MCP servers** (`.mcp.json` +
+inline), **monitors**, **LSP servers**, flat **commands**, and the skills/agents
+packaged inside it. Standalone **settings files** (`settings.json`,
+`settings.local.json`) are scanned for hooks and permission/env posture. A plugin
+carries more auto-executing surface than hooks alone — monitors run a shell command
+at session start, and an LSP/MCP server is a spawned process — so the surface
+inventory in `references/plugin-manifest-checklist.md` enumerates every executable
+channel so none is missed.
 
-**Self-exclusion.** This skill and its own agents (`skill-auditor`,
+The scan covers all of them by default, but the surface is now large enough that a
+bare "audit my skills" should not silently sweep every hook, MCP server, and plugin.
+**Step 0 resolves scope before anything is scanned** — honor what the user's phrasing
+names, and only ask when the request is genuinely ambiguous.
+
+**Self-exclusion.** This skill and its own agents (`config-auditor`,
 `trigger-analyst`, `security-auditor`, `structure-analyst`, `agent-analyst`)
 must be excluded from the audit so the auditor does not recursively grade itself.
 `scripts/scan_targets.py` already filters these by name; do not remove that filter.
 
 ## Phase 1 workflow
+
+### Step 0 — Scope the audit (the starting gate)
+
+The plugin now audits a large surface (skills, agents, commands, hooks, monitors,
+MCP/LSP servers, manifests, settings). Resolve **what** and **where** before scanning,
+so the report answers the question the user actually asked. Two axes:
+
+- **What** — one named target · one kind (`skills` · `agents` · `commands` ·
+  `surface` = hooks/monitors/MCP/LSP/settings) · one `plugin` (its manifest + all its
+  surface) · `all`.
+- **Where** — `global` (`~/.claude`) · `repo` (this project's `.claude`) · both.
+
+**Infer first; do not force a menu.** Map the phrasing and proceed silently:
+
+| The user says… | Scope |
+|---|---|
+| "audit my skills" | skills |
+| "review my agents / subagents" | agents |
+| "audit this plugin" / "my plugins" | plugin(s) + full surface |
+| "check my hooks / MCP / settings" | surface only |
+| an explicit `/config-auditor <what> <where>` | exactly that (see `argument-hint`) |
+| "audit everything / my setup / my config" | all |
+
+**Ask once, only when ambiguous.** If the request is a bare "run the auditor" / "audit
+my stuff" **and** the location holds more than one kind (e.g. a repo with skills *and*
+a plugin), use a single `AskUserQuestion` to pick the scope. Otherwise never ask.
+
+**Scope is enforced by two levers you already have — no special flags per script:**
+
+1. **Kind → which scripts run.** `skills`/`agents`/`commands` → the skill/agent scripts
+   (`check_description`, `check_structure`, `check_security`, `detect_collisions`).
+   `surface` → the surface scripts (`check_hooks`, `check_mcp`, `check_manifest`).
+   `plugin`/`all` → both sets. Running fewer scripts *is* the scoping.
+2. **Where → `--root`.** `global` → `--root ~/.claude/...`; `repo` → omit or
+   `--root .claude/...`; a named plugin → `--root <plugin-dir>`. Every script accepts
+   `--root`. `scan_targets.py` also accepts `--scope global|repo` and `--kind <k>`
+   (repeatable) as convenience filters when you want discovery itself narrowed.
+
+State the resolved scope in one line at the top of the report ("Scope: surface of
+plugin `foo`, repo-local") so the user can see what was and was not covered.
 
 ### Step 1 — Discover
 
@@ -80,7 +134,7 @@ below.
 `$CLAUDE_PLUGIN_ROOT` to the plugin's install directory). Every `scripts/…` command and
 `references/…` read below is relative to that root — resolve it there (run
 `echo $CLAUDE_PLUGIN_ROOT` if you need the absolute path). If the variable is empty in
-your shell, locate the plugin once with `Glob` for `**/skill-auditor*/scripts/scan_targets.py`
+your shell, locate the plugin once with `Glob` for `**/config-auditor*/scripts/scan_targets.py`
 and use its parent directory in place of `$CLAUDE_PLUGIN_ROOT`.
 
 Run the scanner to enumerate every target and parse its frontmatter:
@@ -111,6 +165,15 @@ python3 "$CLAUDE_PLUGIN_ROOT/scripts/check_security.py" --json       # destructi
 python3 "$CLAUDE_PLUGIN_ROOT/scripts/detect_collisions.py" --json    # trigger overlap + same-name cross-scope divergence
 ```
 
+When plugins are in scope, also run the three surface checks (they discover plugins
+themselves, so no `--plugins` flag is needed):
+
+```bash
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/check_hooks.py" --json          # hooks + monitors: fetch-exec, reverse shell, cred egress, base-URL override
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/check_mcp.py" --json            # MCP + LSP servers: secrets, fetch-exec, unpinned supply chain, http://
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/check_manifest.py" --json       # manifest hygiene/provenance + settings/permission posture
+```
+
 Then do the **semantic analysis inline yourself**, dimension by dimension, using
 `references/scoring-rubric.md` plus `references/antipattern-checklist.md` and
 `references/security-checklist.md`. **This is the default path and, for a normal
@@ -127,18 +190,27 @@ modes of a multi-agent fan-out. The dimensions to judge:
 - **Agent-specific** (every agent, embedded or standalone) — system-prompt
   quality, tool-selection fit, model choice, delegation/hand-back behavior. This
   is where a "junior" agent gets its senior-level fixes surfaced.
+- **Plugin surface** (every hook, monitor, MCP/LSP server, command `!`-block,
+  manifest, and settings file) — the executable/external surface graded on security
+  posture and least-privilege, backed by `check_hooks.py` / `check_mcp.py` /
+  `check_manifest.py`. Use the five surface checklists
+  (`hooks-checklist.md`, `mcp-checklist.md`, `commands-checklist.md`,
+  `plugin-manifest-checklist.md`, `settings-permissions-checklist.md`). This is the
+  dimension a skills-only audit was blind to.
 
-**Optional — specialist sub-agents, for large or deep audits only.** Four agents
+**Optional — specialist sub-agents, for large or deep audits only.** Five agents
 in `agents/` (`trigger-analyst`, `structure-analyst`, `security-auditor`,
-`agent-analyst`) mirror the four dimensions above, so a big target set can be split
-for parallel, context-isolated analysis. Reach for them **only** when the set is
-large enough that a single context gets crowded — otherwise inline is better
-(cheaper, coherent, fewer failure modes). Because this ships as a **plugin**, the
-four agents are registered and spawnable via the Task/Agent tool under their
-namespaced names — `skill-auditor:trigger-analyst`, `skill-auditor:structure-analyst`,
-`skill-auditor:security-auditor`, and `skill-auditor:agent-analyst`. Reach for them
-only when the target set is large enough to warrant the fan-out; otherwise the inline
-path above is preferred, and the four agent files double as the checklist it applies.
+`agent-analyst`, `surface-auditor`) mirror the dimensions above, so a big target set
+can be split for parallel, context-isolated analysis. `surface-auditor` owns the whole
+plugin-surface dimension (hooks, monitors, MCP/LSP servers, command `!`-blocks,
+manifest, settings). Reach for them **only** when the set is large enough that a single
+context gets crowded — otherwise inline is better (cheaper, coherent, fewer failure
+modes). Because this ships as a **plugin**, the agents are registered and spawnable via
+the Task/Agent tool under their namespaced names — `config-auditor:trigger-analyst`,
+`config-auditor:structure-analyst`, `config-auditor:security-auditor`,
+`config-auditor:agent-analyst`, and `config-auditor:surface-auditor`. Reach for them only
+when the target set is large enough to warrant the fan-out; otherwise the inline path
+above is preferred, and the agent files double as the checklist it applies.
 
 ### Step 3 — Score and gate
 
@@ -249,10 +321,16 @@ sensitive skills, rely on the local scripts and use the eval loop deliberately.
 Read these as needed; do not inline their content into the report.
 
 - `references/scoring-rubric.md` — dimensions, weights (separate tables for
-  skills and agents), gates, grade bands. Read in Step 1.
+  skills, agents, and config-component kinds), gates, grade bands. Read in Step 1.
 - `references/antipattern-checklist.md` — trigger, structure, security, and
   misclassification antipatterns to check each target against.
-- `references/security-checklist.md` — deterministic + semantic security checks.
+- `references/security-checklist.md` — deterministic + semantic security checks
+  (skills and agents).
+- **Plugin-surface checklists** (used with `surface-auditor` / the surface scripts):
+  `references/hooks-checklist.md`, `references/mcp-checklist.md`,
+  `references/commands-checklist.md`, `references/plugin-manifest-checklist.md`,
+  `references/settings-permissions-checklist.md`. Each carries its primary-source
+  basis and an honest "what a static audit cannot catch" section.
 - `references/report-template.md` — the exact output structure for Phase 1.
 - `references/refactor-workflow.md` — the Phase 2 procedure, used only after the
   user approves specific recommendations.
@@ -265,6 +343,20 @@ default roots plus embedded agents. They are **read-only — except `trigger_eva
 which makes real model calls (see below) and is never run during a Phase-1 audit.
 
 - `scripts/scan_targets.py` — discovery + frontmatter parsing + self-exclusion.
+  `--plugins` / `--plugins-only` additionally discover plugins and their components
+  (hooks, MCP/LSP servers, monitors, commands) plus standalone settings files, each
+  emitted with a parsed `config` dict instead of markdown `frontmatter`.
+- `scripts/check_hooks.py` — hook + monitor commands: fetch-and-execute, reverse
+  shell, credential-read + egress, `ANTHROPIC_BASE_URL`/key override, obfuscation,
+  shell-form vs exec-form, async persistence, http-handler egress. Read-only.
+- `scripts/check_mcp.py` — MCP + LSP servers: plaintext secret in `env`/`headers`,
+  fetch-and-execute launch command, unpinned supply chain (`@latest`/`-y`), plain
+  `http://`. Read-only.
+- `scripts/check_manifest.py` — plugin manifest hygiene/provenance (name, version
+  pinning, dependency pinning, `defaultEnabled` vs bundled surface) and settings
+  posture (bypass mode, `ANTHROPIC_BASE_URL`, `apiKeyHelper`, over-broad grants,
+  blanket MCP approval). `--validate` shells out to `claude plugin validate --strict`
+  when the CLI is present. Read-only.
 - `scripts/check_description.py` — description length, POV, XML tags, trigger
   keywords, name conventions.
 - `scripts/check_structure.py` — body line count, resource references, phantom
@@ -288,9 +380,14 @@ which makes real model calls (see below) and is never run during a Phase-1 audit
 The envelope key differs by script — read the right one:
 
 - `scan_targets.py` → `{"count", "targets": [{name, dir_name, kind, scope, path,
-  frontmatter, body_lines, parse_error, resources}]}`.
-- `check_description.py` / `check_structure.py` / `check_security.py` →
+  frontmatter, body_lines, parse_error, resources}]}`. Plugin/component records
+  (kinds `plugin`, `hook`, `mcp_server`, `lsp_server`, `monitor`, `command`,
+  `settings`) carry `config` (parsed JSON) and `plugin` (owning plugin name) instead
+  of `frontmatter`/`body_lines`.
+- `check_description.py` / `check_structure.py` / `check_security.py` /
+  `check_hooks.py` / `check_mcp.py` / `check_manifest.py` →
   `{"results": [{name, kind, scope, …, "findings": [[SEVERITY, message], …]}]}`;
-  a clean target has `"findings": []`.
+  a clean target has `"findings": []`. (`check_manifest.py` also emits a
+  `"validation"` object when `--validate` is passed.)
 - `detect_collisions.py` → `{"threshold", "collisions": [...],
   "name_conflicts": [{name, type, severity, body_similarity, differs_in, …}]}`.

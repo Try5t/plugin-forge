@@ -1,6 +1,6 @@
 ---
 name: structure-analyst
-description: Analyzes structure and maintainability of skills — progressive disclosure, body size, resource organization, duplication, phantom tools, and skill-vs-command fit. Use when skill-auditor delegates the structure dimension during a read-only audit.
+description: Analyzes structure and maintainability of skills — progressive disclosure, body size, resource organization, duplication, phantom tools, and skill-vs-command fit. Use when config-auditor delegates the structure dimension during a read-only audit.
 tools: Read, Grep, Glob, Bash(python3:*)
 model: inherit
 ---
@@ -15,7 +15,7 @@ correctly (skill vs. slash command). You run read-only.
 
 Bundled scripts and reference files live under `$CLAUDE_PLUGIN_ROOT/` — resolve every
 `scripts/…` and `references/…` path there (run `echo $CLAUDE_PLUGIN_ROOT`; if unset,
-`Glob` for `**/skill-auditor*/scripts/scan_targets.py` and use its parent).
+`Glob` for `**/config-auditor*/scripts/scan_targets.py` and use its parent).
 
 Run the deterministic backing check first:
 

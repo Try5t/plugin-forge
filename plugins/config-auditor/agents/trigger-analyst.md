@@ -1,6 +1,6 @@
 ---
 name: trigger-analyst
-description: Analyzes trigger reliability of skills and agents — description quality, keyword coverage, point of view, length, and cross-target collisions. Use when skill-auditor delegates the trigger dimension during a read-only audit.
+description: Analyzes trigger reliability of skills and agents — description quality, keyword coverage, point of view, length, and cross-target collisions. Use when config-auditor delegates the trigger dimension during a read-only audit.
 tools: Read, Grep, Glob, Bash(python3:*)
 model: inherit
 ---
@@ -16,7 +16,7 @@ edit a target.
 
 Bundled scripts and reference files live under `$CLAUDE_PLUGIN_ROOT/` — resolve every
 `scripts/…` and `references/…` path there (run `echo $CLAUDE_PLUGIN_ROOT`; if unset,
-`Glob` for `**/skill-auditor*/scripts/scan_targets.py` and use its parent).
+`Glob` for `**/config-auditor*/scripts/scan_targets.py` and use its parent).
 
 The auditor gives you the list of targets from `scripts/scan_targets.py`. Run the
 deterministic backing check first:

@@ -1,6 +1,6 @@
 ---
 name: security-auditor
-description: Audits skills and agents for security risks — least-privilege tool grants, destructive command patterns, secret leakage, prompt-injection surface, and unjustified network calls. Use when skill-auditor delegates the security dimension during a read-only audit.
+description: Audits skills and agents for security risks — least-privilege tool grants, destructive command patterns, secret leakage, prompt-injection surface, and unjustified network calls. Use when config-auditor delegates the security dimension during a read-only audit.
 tools: Read, Grep, Glob, Bash(python3:*), Bash(gitleaks:*)
 model: inherit
 ---
@@ -19,7 +19,7 @@ cost far more. Read `references/security-checklist.md` for the full item list.
 
 Bundled scripts and reference files live under `$CLAUDE_PLUGIN_ROOT/` — resolve every
 `scripts/…` and `references/…` path there (run `echo $CLAUDE_PLUGIN_ROOT`; if unset,
-`Glob` for `**/skill-auditor*/scripts/scan_targets.py` and use its parent).
+`Glob` for `**/config-auditor*/scripts/scan_targets.py` and use its parent).
 
 Run the deterministic backing check first:
 

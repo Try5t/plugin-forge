@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "skill-auditor",
-      "source": "./plugins/skill-auditor",
+      "name": "config-auditor",
+      "source": "./plugins/config-auditor",
       "description": "Read-only auditor for Claude Code skills and agents with a weighted rubric, hard gates, and four specialist analyst subagents."
     },
     {

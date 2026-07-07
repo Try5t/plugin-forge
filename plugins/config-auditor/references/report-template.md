@@ -13,12 +13,13 @@ that nothing was changed.
 ## Template
 
 ```markdown
-# Skill & Agent Audit — <date>
+# Skill, Agent & Plugin Audit — <date>
 
 ## Executive summary
 
 Scanned <N> targets: <S> skills, <E> embedded agents, <A> standalone agents,
-across <global count> global and <repo count> repo-local.
+<P> plugins and <C> plugin surface components (hooks, monitors, MCP/LSP servers,
+commands, settings), across <global count> global and <repo count> repo-local.
 
 Grade distribution: A ×_, B ×_, C ×_, D ×_, F ×_.
 BLOCKERs outstanding: <count>.
@@ -42,6 +43,11 @@ this table.
 BLK/MAJ/MIN count **CONFIRMED** findings only; **Dism** = raw script flags cleared on
 adjudication (detailed per target below, never action items).
 
+Kind is any of: `skill`, `standalone_agent`, `embedded_agent`, `command`, `plugin`,
+`hook`, `monitor`, `mcp_server`, `lsp_server`, `settings`. **Group a plugin's rows
+together:** the `plugin` container row first, then the rows for the components it
+ships — the container's grade is the **worst** among them, so the grouping shows why.
+
 ## Per-target scorecards
 
 ### <target name> — Grade <letter> (score <0–100>) — <kind>, <scope>
@@ -51,10 +57,12 @@ Dimensions:
 - <dimension>: <0–10> — <one-line justification>
 - …
 
-Measured ceiling: <REQUIRED. Trigger and Execution cap at 9 by inspection. State one:
-"Trigger/Execution capped at 9 (inspection) — run `trigger_eval.py` to unlock 10
-(~N `claude -p` calls, costs tokens); want me to?" | "not measurable
-(disable-model-invocation / interactive)".>
+Measured ceiling: <REQUIRED for skills/agents. Trigger and Execution cap at 9 by
+inspection. State one: "Trigger/Execution capped at 9 (inspection) — run
+`trigger_eval.py` to unlock 10 (~N `claude -p` calls, costs tokens); want me to?" |
+"not measurable (disable-model-invocation / interactive)". **N/A for config-component
+kinds** (hook, monitor, mcp_server, lsp_server, plugin, settings) — they are graded on
+security posture, not trigger/execution, so a clean one earns a 10 by inspection.>
 
 Findings (confirmed, severity-sorted):
 - [BLOCKER·CONFIRMED] <finding> — why it matters — the change — <file>
@@ -75,6 +83,9 @@ problems before the clean ones)
 Issues that span more than one target:
 - [coherence-level] <skill> promises X but its embedded agent <agent> lacks the
   tools to deliver it.
+- [plugin-level] <plugin> grades F because it ships <component> with a BLOCKER;
+  the container inherits the worst component grade.
+- [surface-level] <hook/monitor/server> in <plugin> <the executable/egress risk>.
 - [cross-scope-level] <target> exists in both global and repo scope with
   diverging content; <which wins is nondeterministic>.
 - [cross-scope-level] <agent A> and <agent B> have overlapping descriptions and

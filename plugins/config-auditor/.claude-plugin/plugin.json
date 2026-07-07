@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "config-auditor",
+  "displayName": "Config Auditor",
+  "version": "1.2.0",
+  "description": "Read-only auditor for Claude Code skills, agents, and whole plugins: scores every target against a weighted rubric, applies hard severity gates (incl. hook/MCP/monitor/settings surface), and returns a prioritized, evidence-backed report. Bundles five specialist analyst subagents for large audits.",
+  "author": {
+    "name": "Try5t"
+  },
+  "license": "MIT",
+  "keywords": ["audit", "skills", "agents", "plugins", "hooks", "mcp", "security", "quality", "review", "linter", "governance"]
+}
