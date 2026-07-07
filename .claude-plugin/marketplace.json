@@ -12,6 +12,11 @@
       "name": "skill-auditor",
       "source": "./plugins/skill-auditor",
       "description": "Read-only auditor for Claude Code skills and agents with a weighted rubric, hard gates, and four specialist analyst subagents."
+    },
+    {
+      "name": "concept-review",
+      "source": "./plugins/concept-review",
+      "description": "Evidence-based concept-phase pipeline (Conductor + 12 specialist sub-agents) to a Go/No-Go decision."
     }
   ]
 }
