@@ -21,7 +21,7 @@ Scanned <N> targets: <S> skills, <E> embedded agents, <A> standalone agents,
 <P> plugins and <C> plugin surface components (hooks, monitors, MCP/LSP servers,
 commands, settings), across <global count> global and <repo count> repo-local.
 
-Grade distribution: A ×_, B ×_, C ×_, D ×_, F ×_.
+Grade distribution: 🟢 A ×_, 🟡 B ×_, 🟠 C ×_, 🔴 D ×_, ⚫ F ×_.
 BLOCKERs outstanding: <count>.
 
 Highest-leverage fixes (top 3–5 across the whole set):
@@ -35,13 +35,36 @@ clean audit (all A's, zero findings) — it is the at-a-glance scoreboard, and t
 per-target scorecards below simply expand each row. Never finish an audit without
 this table.
 
+The table carries **one Score per target — no per-dimension columns.** The dimension
+breakdown lives in the per-target scorecard below; putting Trigger/Execution/etc. in
+the summary turns the scoreboard into a wall of numbers. The single thing the summary
+must still surface is whether a score is *measured* or *inspection-capped* — carried by
+a compact marker on the Score, not a column.
+
+**Color the Grade and Gate cells** with an emoji indicator (renders in the terminal, on
+GitHub, and in artifacts — unlike ANSI or text color). Prefix the letter/word:
+
+- Grade: 🟢 A · 🟡 B · 🟠 C · 🔴 D · ⚫ F
+- Gate: ✅ PASS · ⛔ FAIL
+
 | Target | Kind | Scope | Gate | Grade | Score | BLK | MAJ | MIN | Dism | Top finding |
 |---|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| <name> | skill | repo | PASS | A | 94 | 0 | 0 | 1 | 0 | <one-line top confirmed finding, or "—" if clean> |
+| <name> | skill | repo | ✅ PASS | 🟢 A | 94‡ | 0 | 0 | 1 | 0 | <one-line top confirmed finding, or "—" if clean> |
+| <name> | hook | repo | ⛔ FAIL | ⚫ F | 0 | 1 | 0 | 0 | 0 | fetch-and-execute in SessionStart hook |
 | … | | | | | | | | | | |
 
 BLK/MAJ/MIN count **CONFIRMED** findings only; **Dism** = raw script flags cleared on
 adjudication (detailed per target below, never action items).
+
+**Score marker — `‡` = inspection-capped.** Append `‡` to the Score when a
+measurement-gated dimension contributing to the grade (Trigger, or Execution) is scored
+by inspection at its 9 cap — i.e. the measurement was not run, so the score *could rise*.
+A bare Score (no marker) means nothing is pending measurement: either every
+measurement-gated dimension was actually measured, or the target is a kind with no
+measured ceiling (config components: `hook`, `monitor`, `mcp_server`, `lsp_server`,
+`plugin`, `settings`). A `plugin` row inherits `‡` when its worst child carries it. Add
+one footnote line under the table: *"‡ inspection-capped — Trigger/Execution not
+measured; see scorecard. Run `trigger_eval.py` to unlock."*
 
 Kind is any of: `skill`, `standalone_agent`, `embedded_agent`, `command`, `plugin`,
 `hook`, `monitor`, `mcp_server`, `lsp_server`, `settings`. **Group a plugin's rows
@@ -50,9 +73,9 @@ ships — the container's grade is the **worst** among them, so the grouping sho
 
 ## Per-target scorecards
 
-### <target name> — Grade <letter> (score <0–100>) — <kind>, <scope>
+### <target name> — Grade <🟢/🟡/🟠/🔴/⚫ letter> (score <0–100>) — <kind>, <scope>
 
-Gate status: <PASS | FAIL: reason>
+Gate status: <✅ PASS | ⛔ FAIL: reason>
 Dimensions:
 - <dimension>: <0–10> — <one-line justification>
 - …
