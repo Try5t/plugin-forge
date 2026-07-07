@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "skill-auditor",
   "displayName": "Skill Auditor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Read-only auditor for Claude Code skills and agents: scores every target against a weighted rubric, applies hard severity gates, and returns a prioritized, evidence-backed report. Bundles four specialist analyst subagents for large audits.",
   "author": {
     "name": "Try5t"

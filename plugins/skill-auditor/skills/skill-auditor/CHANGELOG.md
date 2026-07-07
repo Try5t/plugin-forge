@@ -1,5 +1,14 @@
 # skill-auditor — Changelog
 
+## 1.1.0 — 2026-07-07
+
+Verdict axis: every finding is now tagged CONFIRMED / PLAUSIBLE / DISMISSED alongside
+its severity. The letter grade and the recommendation list are computed from CONFIRMED
+(and cautiously PLAUSIBLE) findings only; DISMISSED flags — raw script false-positives
+or not-applicable-in-context — are shown separately with a one-line reason and never
+move the grade or become a to-do. The grading table gains a **Dism** column. Docs-only;
+no script changes.
+
 ## Update — 2026-07-05
 
 Drop-in update for `~/.claude/skills/skill-auditor/`. Read-only analysis skill; no

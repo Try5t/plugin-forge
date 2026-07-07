@@ -152,15 +152,20 @@ For each target, apply `references/scoring-rubric.md`:
    pass/fail, not points. (A `name`≠directory mismatch is a MAJOR, not a gate.)
 2. **Weighted score next.** Compute the 0–100 score using the dimension weights
    for the target's kind (skills and agents use different weight tables — see the
-   rubric). Map to a letter grade. **Measured ceiling:** score Trigger and
+   rubric). Map to a letter grade. **Score from CONFIRMED findings only — a
+   DISMISSED flag must not lower a dimension** (see the rubric's Verdict section).
+   **Measured ceiling:** score Trigger and
    Execution at most 9 by inspection — the 10th point needs a measurement
    (`trigger_eval.py` / `run_loop` / `aggregate_benchmark`), which the read-only
    Phase 1 never runs. State the cap per target and *offer* the paid measurement,
    or say it is not measurable (see the Measuring section).
-3. Record every finding with a severity label (BLOCKER / MAJOR / MINOR) and a
-   finding class: `skill-level`, `agent-level`, `coherence-level` (skill vs. its
-   embedded agent), or `cross-scope-level` (same target duplicated across
-   global/repo, or two agents competing for the same delegation).
+3. Record every finding with three attributes: a **severity** (BLOCKER / MAJOR /
+   MINOR — how bad if real), a **verdict** (CONFIRMED / PLAUSIBLE / DISMISSED —
+   whether it is real; see the rubric's Verdict section), and a **finding class**
+   (`skill-level`, `agent-level`, `coherence-level`, or `cross-scope-level`). Every
+   raw script flag must be adjudicated to a verdict — never pass one through
+   unadjudicated; a DISMISSED finding carries a one-line reason (false-positive or
+   not-applicable).
 
 Cross-check findings against `references/antipattern-checklist.md` and
 `references/security-checklist.md` so nothing common is missed.
@@ -173,14 +178,18 @@ Produce the report using the exact template in
 1. **Executive summary** — target counts by kind/scope, grade distribution, the
    3–5 highest-leverage fixes across the whole set.
 2. **Grading table (MANDATORY, every run)** — one row per target: gate, grade,
-   score, finding counts by severity (BLK/MAJ/MIN), and the top finding. Always
+   score, **CONFIRMED** finding counts by severity (BLK/MAJ/MIN) plus a **Dism**
+   count of adjudicated-away flags, and the top *confirmed* finding. Always
    produced, even when every target is clean (all A's). The required at-a-glance
    scoreboard — never finish an audit without it.
 3. **Per-target scorecards** — grade, gate status, weighted score, dimension
-   breakdown, and findings sorted by severity.
+   breakdown, and findings sorted by severity, each tagged with its verdict
+   (`[MAJOR·CONFIRMED]`, `[MAJOR·DISMISSED — reason]`). List DISMISSED flags in a
+   separate "Adjudicated / dismissed" block so they never read as to-dos.
 4. **Cross-cutting findings** — collisions, cross-scope duplicates, coherence
    mismatches that span more than one target.
-5. **Prioritized recommendations** — a single numbered list, ordered by
+5. **Prioritized recommendations** — a single numbered list of **CONFIRMED** (and
+   PLAUSIBLE, marked "verify") findings only — never a DISMISSED one; ordered by
    leverage (severity × ease), each with: what, why it matters, the concrete
    change, and the affected file. This numbered list is what the user approves
    from.

@@ -127,6 +127,30 @@ Every finding carries one severity, independent of the target's overall grade:
 - **MINOR** — polish; improves quality but never gates a grade (e.g. missing
   version field, a reference file without a table of contents).
 
+## Verdict (adjudication status) — the second axis
+
+Severity says *how bad a finding is if real*. Verdict says *whether it is real*. They
+are independent: the deterministic scripts raise **suspects**; the model's adjudication
+decides which are **defects**. Every finding carries exactly one verdict.
+
+- **CONFIRMED** — adjudicated a real defect on inspection. Counts against the grade and
+  appears in the recommendations.
+- **PLAUSIBLE** — looks real but rests on a check Phase-1 cannot perform (a runtime test,
+  a measurement, a packaging behavior). Appears in recommendations marked "verify"; weigh
+  it into the grade cautiously, never as if confirmed.
+- **DISMISSED** — a raw script flag cleared on inspection. **Requires a one-line reason**
+  of one of two kinds: *false-positive* (the flag is wrong — e.g. a destructive-pattern
+  string that is the detector's own pattern list) or *not-applicable* (technically true
+  but does not govern this target — e.g. missing WHEN phrasing on a delegation-only agent
+  whose selection is name-driven, not description-driven). A DISMISSED finding **never
+  moves the grade and never becomes a recommendation.**
+
+**Grade rule.** Compute dimension scores and the letter grade from **CONFIRMED** findings
+(and PLAUSIBLE ones, weighed cautiously) only. A DISMISSED flag must not pull a dimension
+down: if a raw script MAJOR is dismissed, the dimension is scored as if it were never
+raised. This is what stops a cleared flag from silently lowering a grade — or its removal
+from silently raising one.
+
 ## Finding classes
 
 Tag each finding with the level it lives at, so the report can group cross-cutting

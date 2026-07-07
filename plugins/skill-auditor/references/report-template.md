@@ -34,10 +34,13 @@ clean audit (all A's, zero findings) — it is the at-a-glance scoreboard, and t
 per-target scorecards below simply expand each row. Never finish an audit without
 this table.
 
-| Target | Kind | Scope | Gate | Grade | Score | BLK | MAJ | MIN | Top finding |
-|---|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| <name> | skill | repo | PASS | A | 94 | 0 | 0 | 1 | <one-line top finding, or "—" if clean> |
-| … | | | | | | | | | |
+| Target | Kind | Scope | Gate | Grade | Score | BLK | MAJ | MIN | Dism | Top finding |
+|---|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| <name> | skill | repo | PASS | A | 94 | 0 | 0 | 1 | 0 | <one-line top confirmed finding, or "—" if clean> |
+| … | | | | | | | | | | |
+
+BLK/MAJ/MIN count **CONFIRMED** findings only; **Dism** = raw script flags cleared on
+adjudication (detailed per target below, never action items).
 
 ## Per-target scorecards
 
@@ -53,10 +56,16 @@ Measured ceiling: <REQUIRED. Trigger and Execution cap at 9 by inspection. State
 (~N `claude -p` calls, costs tokens); want me to?" | "not measurable
 (disable-model-invocation / interactive)".>
 
-Findings (severity-sorted):
-- [BLOCKER] <finding> — why it matters — the change — <file>
-- [MAJOR] …
-- [MINOR] …
+Findings (confirmed, severity-sorted):
+- [BLOCKER·CONFIRMED] <finding> — why it matters — the change — <file>
+- [MAJOR·CONFIRMED] …
+- [MAJOR·PLAUSIBLE] <finding> — <what must be verified to confirm it> — <file>
+- [MINOR·CONFIRMED] …
+
+Adjudicated / dismissed flags (raw script flags cleared on inspection — NOT action items):
+- [MAJOR·DISMISSED] <flag> — reason: not-applicable — <one line>
+- [BLOCKER·DISMISSED] <flag> — reason: false-positive — <one line>
+- (or "— none" when every raw flag was confirmed)
 
 (repeat per target; order targets worst-grade-first so the user sees the
 problems before the clean ones)
@@ -73,7 +82,8 @@ Issues that span more than one target:
 
 ## Prioritized recommendations
 
-Ordered by leverage (severity × ease). This is the list to approve from — reply
+Ordered by leverage (severity × ease). **CONFIRMED and PLAUSIBLE findings only — a
+DISMISSED flag is never a recommendation.** This is the list to approve from — reply
 with the numbers you want applied.
 
 1. <target>: <concrete change>. Why: <payoff>. File: <path>. Severity: <label>.
@@ -114,3 +124,8 @@ numbered recommendations to apply and I'll hand off to the refactor phase
   costs tokens) to unlock 10, or say it is not measurable. Never silently score
   those two dimensions 9 — the reader must know a 9 is "pending measurement", not
   earned.
+- **Every finding gets a verdict.** Severity is *how bad if real*; verdict is
+  *whether it is real*. The grade and the recommendations count only CONFIRMED (and
+  cautiously PLAUSIBLE). The dismissed block is transparency — it shows the scanner
+  fired and why you overruled it — so a cleared flag is visible without masquerading
+  as a to-do.
