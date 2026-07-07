@@ -29,6 +29,7 @@ eval-set JSON:
 """
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -44,14 +45,18 @@ def read_skill(path: str):
     return fm.get("name", Path(path).parent.name), fm.get("description", "")
 
 
-def judge_prompt(name: str, desc: str, query: str) -> str:
+def judge_prompt(desc: str, query: str) -> str:
+    # Framed as classifying inert example text (not "should YOU handle this"): the
+    # full `claude -p` agent otherwise either tries to ACT on the message or reasons
+    # about its OWN installed skills, instead of judging the description we pass in.
+    # Asking for one sentence of reasoning then an explicit VERDICT tag makes the
+    # answer both reliable and machine-parseable.
     return (
-        "You decide whether a Claude Code skill should handle a user's message.\n"
-        f"SKILL name: {name}\n"
-        f"SKILL description: {desc}\n\n"
-        f"USER MESSAGE: {query}\n\n"
-        "Should this skill be invoked to handle this message? "
-        "Answer with exactly one word: YES or NO."
+        "Below is a skill description and one example user message. Decide whether a\n"
+        "router should select this skill for that message, based only on the description.\n\n"
+        f"--- skill description ---\n{desc}\n--- end ---\n\n"
+        f"example user message: {query!r}\n\n"
+        "Reason in one sentence, then end with exactly 'VERDICT: YES' or 'VERDICT: NO'."
     )
 
 
@@ -62,9 +67,12 @@ def call_claude(prompt: str, model: str | None) -> str:
     cmd = [exe, "-p"]
     if model:
         cmd += ["--model", model]
-    cmd += [prompt]
+    # Deliver the prompt on STDIN, not as a positional arg. `claude -p "<prompt>"`
+    # does NOT reliably hand an argv prompt to the model in a piped subprocess — the
+    # model receives no message ("I don't see a request") and every judgment comes
+    # back unparseable. Piping on stdin delivers it deterministically.
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=180)
     except (subprocess.SubprocessError, OSError) as e:
         return f"ERR:{e}"
     # A failed call (non-zero exit: auth error, rate limit, etc.) is NOT a "no"
@@ -74,12 +82,15 @@ def call_claude(prompt: str, model: str | None) -> str:
         first = ((proc.stderr or proc.stdout or "").strip().splitlines() or ["exit " + str(proc.returncode)])[0]
         return f"ERR:{first[:90]}"
     out = (proc.stdout or "").strip().upper()
-    head = out[:20]
-    if "YES" in head:
-        return "YES"
-    if "NO" in head:
-        return "NO"
-    return "?"
+    # Take the LAST `VERDICT: YES|NO` so the final verdict wins over any YES/NO used
+    # mid-reasoning. A reply with NO parseable verdict is MISSING EVIDENCE, not a
+    # "no" — return ERR so the abort guards fire instead of silently scoring it as
+    # not-triggered (which is exactly how the old code fabricated a score).
+    verdicts = re.findall(r"VERDICT:\s*(YES|NO)", out)
+    if verdicts:
+        return verdicts[-1]
+    head = out[:60].replace("\n", " ")
+    return f"ERR:unparseable judge reply (no VERDICT): {head}"
 
 
 def suggested_score(recall: float, false_rate: float, acc: float):
@@ -118,7 +129,7 @@ def main():
     first_err = None
     for i, item in enumerate(queries):
         q, expect = item["q"], item.get("expect", "trigger")
-        votes = [call_claude(judge_prompt(name, desc, q), args.model) for _ in range(args.repeats)]
+        votes = [call_claude(judge_prompt(desc, q), args.model) for _ in range(args.repeats)]
         errs = [v for v in votes if v.startswith("ERR")]
         n_err += len(errs)
         if errs and first_err is None:
