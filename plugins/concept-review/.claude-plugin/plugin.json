@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "concept-review",
   "displayName": "Concept Review",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evidence-based concept-phase pipeline: a Conductor drives 12 specialist sub-agents through a gated, dependency-ordered chain — intake, research, product, UX, architecture, feasibility, QA, red-team critique — to a Go/No-Go decision. Bundles the concept-doc-standard.",
   "author": {
     "name": "Try5t"
