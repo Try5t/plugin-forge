@@ -70,6 +70,8 @@ Statements for which none of these sources exists are marked in the text with `[
 
 **Do not inherit citations on trust.** When you rely on a code or fact claim made by a predecessor artifact, re-verify it at the source (open the `file:line`, re-read the standard) before building on it. A wrong claim that rides unchallenged from one phase into the next is how a phantom risk or a false "confirmed" reaches the critique — the second most common failure of this phase.
 
+**For a code claim, verify invocation, not just existence.** Confirming a symbol *exists* (a class, method, or registration is present) is not the same as confirming it is *reached on a production path*. Before treating a component as "the live boundary" for anything, grep for its registration AND its call sites (who invokes it, is it wired into an agent/tool list/request path). A wired-but-unreachable seam — registered in DI but never called, or a value hardcoded past it — is a phantom: it will read as "verified" to every later phase while doing nothing. Existence is not invocation.
+
 ## Conflict Duty
 
 Do not smooth over contradictions with other artifacts. Enter every conflict under `open_conflicts` and describe it in the text. Examples: the Product Owner's scope against the Architect's simplicity, QA's testability against the Developer's effort. The value of this phase lies in the unresolved conflicts, not in consensus.
