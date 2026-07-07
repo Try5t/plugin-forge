@@ -43,7 +43,9 @@ Then restart the session (or `/reload-plugins`). Updates are never automatic.
 2. Add an entry to `.claude-plugin/marketplace.json` with `"source": "./plugins/<name>"`.
 3. Validate: `claude plugin validate .`
 
-Each plugin owns its own `README.md` and version.
+Each plugin owns its own `README.md` and version. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the full guide (conventions, versioning,
+local dev loop, commit-identity, and the pre-push checklist).
 
 ## Layout
 
