@@ -41,6 +41,18 @@ def _has_manifest(d: Path) -> bool:
     return (d / ".claude-plugin" / "plugin.json").is_file() or (d / "plugin.json").is_file()
 
 
+def _plugin_root(target_dir: Path):
+    """Return the plugin root (dir holding `.claude-plugin/plugin.json`) for a
+    target packaged inside a plugin, or None. Plugins share scripts at the plugin
+    root (`<root>/scripts/`), referenced from skills/agents via
+    `$CLAUDE_PLUGIN_ROOT/scripts/...`, so those scripts are shipped even though they
+    are not in the target's own co-located `scripts/` dir."""
+    for d in [target_dir, *target_dir.parents]:
+        if _has_manifest(d):
+            return d
+    return None
+
+
 def _is_plugin(target_dir: Path) -> bool:
     """True only if the skill is packaged where a Claude Code plugin actually
     REGISTERS skills: `<plugin>/skills/<name>/SKILL.md`, with the plugin manifest
@@ -86,8 +98,13 @@ def check_target(rec):
     if unreferenced:
         findings.append(("MINOR", f"bundled resources not referenced from body: {', '.join(unreferenced)}"))
 
-    # Phantom tools: .py referenced in body but not present.
+    # Phantom tools: .py referenced in body but not present. A script counts as
+    # shipped if it is a co-located resource OR lives at the plugin root's
+    # `scripts/` (where plugin-packaged skills/agents resolve $CLAUDE_PLUGIN_ROOT).
     shipped = {r.split("/")[-1] for r in rec["resources"] if r.endswith(".py")}
+    proot = _plugin_root(target_dir)
+    if proot and (proot / "scripts").is_dir():
+        shipped |= {p.name for p in (proot / "scripts").glob("*.py")}
     for m in SCRIPT_REF.finditer(body):
         script = m.group(1)
         if script not in shipped:

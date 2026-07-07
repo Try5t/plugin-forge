@@ -50,6 +50,18 @@ SECRET_PATTERNS = [
 
 GATE_TOOLS = ("allowed-tools", "tools")
 
+# Single-backtick inline-code spans. Stripped from markdown bodies before the
+# destructive/network scan so a checklist that *describes* a pattern (e.g.
+# "`rm -rf`", "`curl … | bash`") is not mistaken for an actual command. Fenced
+# code blocks (```) and script files are left intact — a real command there still
+# matters. Especially relevant for a security tool whose own docs are full of the
+# very strings it hunts.
+INLINE_CODE = re.compile(r"`[^`\n]+`")
+
+
+def scrub_inline_code(text: str) -> str:
+    return INLINE_CODE.sub(" ", text)
+
 
 def gather_text(rec):
     """Return concatenated body + script text and a per-file map for locating hits."""
@@ -104,18 +116,21 @@ def check_target(rec):
 
     files = gather_text(rec)
 
-    # Destructive patterns in grant and in scripts.
+    # Destructive patterns in grant and in scripts. Markdown bodies are scrubbed of
+    # inline-code spans first (pattern descriptions, not commands); script files and
+    # the tool grant are scanned verbatim — a real destructive command there counts.
     grant_text = grant or ""
     for path, text in files.items():
-        haystack = text if path.endswith(".py") else text
+        haystack = text if path.endswith(".py") else scrub_inline_code(text)
         for pat, label in DESTRUCTIVE:
             if pat.search(haystack) or pat.search(grant_text):
                 findings.append(("BLOCKER", f"destructive pattern '{label}' present ({Path(path).name}); needs narrowing guardrail"))
                 break
 
-    # Network egress signal.
+    # Network egress signal (same inline-code scrub for markdown bodies).
     for path, text in files.items():
-        if NETWORK.search(text):
+        hay = text if path.endswith(".py") else scrub_inline_code(text)
+        if NETWORK.search(hay):
             findings.append(("MAJOR", f"network call signal in {Path(path).name}; confirm it is justified"))
             break
 
