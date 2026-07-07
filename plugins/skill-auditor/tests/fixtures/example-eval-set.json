@@ -1,0 +1,15 @@
+{
+  "_comment": "Example eval set for trigger_eval.py. 'trigger' = the skill SHOULD fire; 'no-trigger' = a hard near-miss it should NOT fire on. Aim for ~12 trigger + ~8 near-miss. This example is shaped for a wissora-bug-style skill.",
+  "queries": [
+    {"q": "log a bug for the crash when saving an interview", "expect": "trigger"},
+    {"q": "file a bug: TTS returns 500 on long answers", "expect": "trigger"},
+    {"q": "report a defect in the publish flow", "expect": "trigger"},
+    {"q": "the app throws NullReferenceException on complete, track it", "expect": "trigger"},
+    {"q": "raise a bug about the stale components.css after redeploy", "expect": "trigger"},
+    {"q": "create a user story for semantic search", "expect": "no-trigger"},
+    {"q": "update the state of WIS-42 to Fixed", "expect": "no-trigger"},
+    {"q": "write a feature for multi-session interviews", "expect": "no-trigger"},
+    {"q": "post a comment on the ticket with the root cause", "expect": "no-trigger"},
+    {"q": "run the feature flow for this story", "expect": "no-trigger"}
+  ]
+}

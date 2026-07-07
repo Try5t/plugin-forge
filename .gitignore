@@ -1,0 +1,8 @@
+# Python bytecode caches (regenerated whenever the scripts run)
+__pycache__/
+*.py[cod]
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp

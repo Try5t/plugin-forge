@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "plugin-forge",
+  "owner": {
+    "name": "Try5t"
+  },
+  "metadata": {
+    "description": "Plugin Forge — a private marketplace of Claude Code plugins and agents."
+  },
+  "plugins": [
+    {
+      "name": "skill-auditor",
+      "source": "./plugins/skill-auditor",
+      "description": "Read-only auditor for Claude Code skills and agents with a weighted rubric, hard gates, and four specialist analyst subagents."
+    }
+  ]
+}
