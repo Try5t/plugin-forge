@@ -149,9 +149,15 @@ line count, and a list of bundled resources. Records with unparseable frontmatte
 are flagged, not dropped — a broken skill is exactly what the audit needs to
 catch.
 
-Read `references/scoring-rubric.md` now. It defines the dimensions, weights,
-gates, and grade bands you will apply. Do not invent your own scoring; consistency
-across runs is the whole value.
+Read `references/scoring-rubric.md` **and** `references/report-template.md` now —
+both, before you score anything. The rubric defines the dimensions, weights, gates,
+and grade bands you will apply; the template defines the exact report shape you must
+emit in Step 4 (emoji Grade/Gate cells, the `‡` inspection-cap marker, the mandatory
+column order). Load the template here rather than reconstructing it from memory in
+Step 4: "produce the report using the exact template" is only enforceable if the
+template is actually open, and both files are needed regardless, so read them
+together. Do not invent your own scoring or report layout; consistency across runs is
+the whole value.
 
 ### Step 2 — Analyze (deterministic scripts, then inline semantic judgment)
 

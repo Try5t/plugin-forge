@@ -25,15 +25,24 @@ import os
 import sys
 from pathlib import Path
 
-# Names belonging to the auditor itself — excluded from every scan.
-SELF_EXCLUDE = {
-    "config-auditor",
-    "trigger-analyst",
-    "structure-analyst",
-    "security-auditor",
-    "agent-analyst",
-    "surface-auditor",
-}
+# The auditor's own install root, resolved from THIS script's location so it
+# works wherever the plugin lives — no absolute path is baked in, which keeps it
+# correct across machines that clone the shared repo. A target belongs to the
+# auditor iff its file sits inside this tree. Matching on bare component names
+# instead (the old approach) wrongly excluded any audited plugin that reused a
+# generic name such as "structure-analyst", silently dropping it from the scan.
+SELF_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _is_self(path) -> bool:
+    """True when `path` is one of the auditor's own bundled files (inside its
+    own plugin tree), so it is excluded from every scan and never audits itself.
+    Portable: `SELF_ROOT` is derived from this script's location, not hardcoded."""
+    try:
+        Path(path).resolve().relative_to(SELF_ROOT)
+        return True
+    except (ValueError, OSError):
+        return False
 
 
 def default_roots():
@@ -151,7 +160,7 @@ def discover(roots_by_kind):
         if not root.is_dir():
             continue
         for skill_md in sorted(root.glob("*/SKILL.md")):
-            if skill_md.parent.name in SELF_EXCLUDE:
+            if _is_self(skill_md):
                 continue
             if str(skill_md) in seen:
                 continue
@@ -162,7 +171,7 @@ def discover(roots_by_kind):
             emb_dir = skill_md.parent / "agents"
             if emb_dir.is_dir():
                 for agent_md in sorted(emb_dir.glob("*.md")):
-                    if agent_md.stem in SELF_EXCLUDE:
+                    if _is_self(agent_md):
                         continue
                     if str(agent_md) in seen:
                         continue
@@ -176,7 +185,7 @@ def discover(roots_by_kind):
         if not root.is_dir():
             continue
         for agent_md in sorted(root.glob("*.md")):
-            if agent_md.stem in SELF_EXCLUDE:
+            if _is_self(agent_md):
                 continue
             if str(agent_md) in seen:
                 continue
@@ -243,7 +252,7 @@ def find_plugin_manifests(roots):
             if rp in seen:
                 continue
             # Skip the auditor's own plugin tree.
-            if any(part in SELF_EXCLUDE for part in manifest.parts):
+            if _is_self(manifest):
                 continue
             seen.add(rp)
             yield manifest
@@ -414,7 +423,7 @@ def discover_plugin(manifest_path: Path):
     cmd_dir = plugin_dir / "commands"
     if cmd_dir.is_dir():
         for cmd_md in sorted(cmd_dir.glob("*.md")):
-            if cmd_md.stem in SELF_EXCLUDE:
+            if _is_self(cmd_md):
                 continue
             crec = make_record(cmd_md, "command")
             # A flat command's invocation name is its filename stem, not the
@@ -429,7 +438,7 @@ def discover_plugin(manifest_path: Path):
     skills_dir = plugin_dir / "skills"
     if skills_dir.is_dir():
         for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
-            if skill_md.parent.name in SELF_EXCLUDE:
+            if _is_self(skill_md):
                 continue
             srec = make_record(skill_md, "skill")
             srec["plugin"] = plugin_name
@@ -437,7 +446,7 @@ def discover_plugin(manifest_path: Path):
             emb = skill_md.parent / "agents"
             if emb.is_dir():
                 for agent_md in sorted(emb.glob("*.md")):
-                    if agent_md.stem in SELF_EXCLUDE:
+                    if _is_self(agent_md):
                         continue
                     arec = make_record(agent_md, "embedded_agent")
                     arec["parent_skill"] = srec["name"]
@@ -446,7 +455,7 @@ def discover_plugin(manifest_path: Path):
     agents_dir = plugin_dir / "agents"
     if agents_dir.is_dir():
         for agent_md in sorted(agents_dir.glob("*.md")):
-            if agent_md.stem in SELF_EXCLUDE:
+            if _is_self(agent_md):
                 continue
             arec = make_record(agent_md, "standalone_agent")
             arec["plugin"] = plugin_name
