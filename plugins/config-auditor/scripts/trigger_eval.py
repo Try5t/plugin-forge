@@ -93,6 +93,71 @@ def call_claude(prompt: str, model: str | None) -> str:
     return f"ERR:unparseable judge reply (no VERDICT): {head}"
 
 
+# Each `claude -p` call is a FRESH CLI session: the full Claude Code system
+# prompt + tool definitions are re-sent every time, cold, with no cache reuse
+# across calls. That fixed overhead — not our short judge prompt — dominates the
+# bill. The figure is an order-of-magnitude estimate, not a measurement; it moves
+# with the CLI version and the installed plugin/MCP surface.
+SESSION_OVERHEAD_TOKENS = 15_000
+VERDICT_REPLY_TOKENS = 50          # "one sentence + VERDICT: YES|NO"
+CHARS_PER_TOKEN = 4                # crude but adequate for a preview
+
+# USD per million tokens (input, output, footnote marker).
+PRICING = {
+    "claude-opus-4-8":  (5.00, 25.00, ""),
+    "claude-sonnet-5":  (2.00, 10.00, "*"),   # intro pricing through 2026-08-31
+    "claude-haiku-4-5": (1.00, 5.00, ""),
+}
+SONNET_NOTE = ("* Sonnet 5 introductory pricing, through 2026-08-31; "
+               "list price after that is $3.00/$15.00.")
+
+
+def cost_preview(name: str, desc: str, queries: list, repeats: int, model: str | None) -> None:
+    """Print what the real run would actually cost, in tokens and dollars."""
+    n_calls = len(queries) * repeats
+    avg_prompt_chars = sum(len(judge_prompt(desc, q["q"])) for q in queries) / len(queries)
+    prompt_tok = round(avg_prompt_chars / CHARS_PER_TOKEN)
+    in_per_call = SESSION_OVERHEAD_TOKENS + prompt_tok
+    total_in = in_per_call * n_calls
+    total_out = VERDICT_REPLY_TOKENS * n_calls
+
+    print(f"Skill:    {name}")
+    print(f"Eval set: {len(queries)} queries x {repeats} repeats = {n_calls} `claude -p` calls")
+    print(f"Model:    {model or 'whatever the CLI is configured to use (pass --model to pin one)'}")
+    print()
+    print("Per call — every call is a fresh `claude -p` session, so the CLI's own")
+    print("system prompt and tool definitions are re-sent cold each time:")
+    print(f"  {'session overhead (system prompt + tools)':<40} ~{SESSION_OVERHEAD_TOKENS:>9,} tok in")
+    print(f"  {'judge prompt (description + one query)':<40} ~{prompt_tok:>9,} tok in")
+    print(f"  {'verdict reply':<40} ~{VERDICT_REPLY_TOKENS:>9,} tok out")
+    print(f"  {f'x {n_calls} calls':<40} ~{total_in:>9,} tok in")
+    print(f"  {'':<40} ~{total_out:>9,} tok out")
+    print()
+    print("Estimated cost of one full run, at API list price:")
+    w = (20, 11, 12, 10)
+    print("  ┌" + "┬".join("─" * n for n in w) + "┐")
+    print(f"  │ {'model':<19}│ in $/MTok │ out $/MTok │ est. run │")
+    print("  ├" + "┼".join("─" * n for n in w) + "┤")
+    for mid, (pin, pout, mark) in PRICING.items():
+        cost = total_in / 1e6 * pin + total_out / 1e6 * pout
+        sel = "→ " if model == mid else "  "
+        print(f"  │ {sel}{mid:<16} │ {pin:>8.2f}{mark:<1} │ {pout:>9.2f}{mark:<1} │ ${cost:>7.2f} │")
+    print("  └" + "┴".join("─" * n for n in w) + "┘")
+    print(f"  {SONNET_NOTE}")
+    print()
+    print("  Token counts are estimates (the session overhead is not measured and")
+    print("  moves with your CLI version and installed plugins) — use them to size")
+    print("  the run, not to reconcile a bill.")
+    print()
+    print("  The dollar figures apply ONLY if `claude` is authenticated with an API")
+    print("  key. On a Claude subscription (Pro/Max) you are billed nothing here —")
+    print(f"  instead these {n_calls} calls count against your plan's 5-hour and weekly")
+    print("  usage limits, on top of whatever this terminal is already spending. A")
+    print("  full run is a large burst of cold-context sessions and can exhaust the")
+    print("  5-hour window; start it when being rate-limited for a while is OK, or")
+    print("  lower --repeats to shrink it.")
+
+
 def suggested_score(recall: float, false_rate: float, acc: float):
     if recall != recall or false_rate != false_rate:  # NaN guard
         return None
@@ -110,14 +175,21 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="Preview cost only; make NO calls.")
     args = ap.parse_args()
 
+    # The preview draws a box-drawing table; a legacy Windows console defaults to
+    # cp1252 and would raise UnicodeEncodeError on it.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+
     name, desc = read_skill(args.skill)
     queries = json.loads(Path(args.eval_set).read_text(encoding="utf-8"))["queries"]
     n_calls = len(queries) * args.repeats
 
-    print(f"Skill: {name}")
-    print(f"Eval set: {len(queries)} queries x {args.repeats} repeats = {n_calls} `claude -p` calls")
-    print("WARNING: this makes real model calls and COSTS TOKENS (each call is one short judge")
-    print("         prompt; not ZDR-covered). This is not part of the read-only audit.")
+    cost_preview(name, desc, queries, args.repeats, args.model)
+    print()
+    print("WARNING: the real run makes real model calls and COSTS TOKENS (not ZDR-covered).")
+    print("         This is not part of the read-only audit.")
     if args.dry_run:
         print("[dry-run] no calls made. Re-run without --dry-run to execute.")
         return

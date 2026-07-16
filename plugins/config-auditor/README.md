@@ -129,6 +129,18 @@ py -3 scripts/run_trigger_eval.py         # dry-run: preview the cost (no calls)
 py -3 scripts/run_trigger_eval.py --go    # real run (COSTS TOKENS)
 ```
 
+The dry-run prints what the real run actually costs, not just a call count. Each call is
+a **fresh `claude -p` session**, so the CLI's own system prompt and tool definitions are
+re-sent cold every time — that fixed overhead, not the short judge prompt, dominates the
+bill (the shipped 27-query set at the default `--repeats 3` is ~1.2M input tokens across
+81 calls). The preview breaks that down and prices it per model, so you can see that the
+model choice swings the run ~5x while the call count doesn't move; pass `--model` to mark
+the one you'll use. **On a Pro/Max subscription the dollar figures don't apply** — the
+calls count against your plan's 5-hour and weekly limits instead, and a full run is a
+large burst of cold-context sessions that can exhaust the 5-hour window. Time it
+accordingly, or lower `--repeats` (at the cost of the majority-vote smoothing) to shrink
+it. Token counts are estimates for sizing the run, not for reconciling a bill.
+
 `trigger_eval.py` is a single-skill judge approximation — evidence, not proof. For true
 selection under competition with your other skills, use skill-creator's `run_loop.py`.
 (Config-component kinds — hooks, MCP/LSP, monitors, settings — are not measured this way;
