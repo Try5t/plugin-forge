@@ -62,6 +62,10 @@ Avoid the push→pull round-trip while developing:
 - Point a marketplace at your **local checkout**:
   `claude plugin marketplace add C:/repos/plugin-forge`, then edit →
   `claude plugin marketplace update` → `/reload-plugins`.
+  **This local path is for your own machine only — never commit it (or a `./` relative
+  path) into a shared repo's `.claude/settings.json`. It won't resolve elsewhere and
+  causes repeated failed clones; shared config references the marketplace by its GitHub
+  shorthand `Try5t/plugin-forge`.**
 - Or keep a work-in-progress skill **loose** in `~/.claude/skills/` for instant reload,
   and fold it into a plugin only when you cut a release.
 

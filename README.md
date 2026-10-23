@@ -24,6 +24,34 @@ claude plugin install concept-review@plugin-forge
 
 Restart the session (or `/reload-plugins`) to activate.
 
+## Enabling only in the repos that need it
+
+Knowing the marketplace and *activating* a plugin are two separate things.
+`marketplace add` only registers the catalog (one clone, cached in `~/.claude`) — it
+turns on nothing. To enable a plugin **only in a specific repo**, commit this to that
+repo's `.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "config-auditor@plugin-forge": true
+  }
+}
+```
+
+This references the marketplace by its **name** (`plugin-forge`), resolved from the
+globally known catalog — **no path**. Repos without the entry don't load the plugin.
+Prerequisite: the marketplace is known on the machine
+(`claude plugin marketplace add Try5t/plugin-forge`, once); teammates run that once too,
+or declare it per repo with a **git-source** `extraKnownMarketplaces` entry.
+
+> **Never commit a local or relative marketplace path** (`C:/…`, `./`, or a
+> `"source": "directory"`) into a shared repo. Claude Code stores it unresolved, so it
+> breaks on every other machine and triggers repeated failed clones — the classic
+> "wrong path" symptom. In shared config, always reference the marketplace by the GitHub
+> shorthand `Try5t/plugin-forge` (or the full `https://github.com/Try5t/plugin-forge.git`),
+> never a filesystem path.
+
 ## Updating
 
 The marketplace source is remembered — no re-clone. Pull the latest and apply:
