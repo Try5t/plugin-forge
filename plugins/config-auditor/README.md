@@ -87,8 +87,8 @@ and was not — covered. When you approve recommendations, it hands off to Phase
 ## Install
 
 ```bash
-# From the private GitLab marketplace:
-claude plugin marketplace add https://gitlab.com/Try5t/plugin-forge.git
+# From the marketplace:
+claude plugin marketplace add Try5t/plugin-forge
 claude plugin install config-auditor@plugin-forge
 
 # Or from a local clone:

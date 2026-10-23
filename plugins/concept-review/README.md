@@ -16,7 +16,7 @@ skill drives a roster of specialist sub-agents through a gated, dependency-order
 ## Install
 
 ```bash
-claude plugin marketplace add https://gitlab.com/Try5t/plugin-forge.git
+claude plugin marketplace add Try5t/plugin-forge
 claude plugin install concept-review@plugin-forge
 ```
 Restart the session (or `/reload-plugins`), then run `/concept-review <project or feature>`.

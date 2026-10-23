@@ -1,6 +1,6 @@
 # Contributing to plugin-forge
 
-A private Claude Code plugin marketplace. The root `.claude-plugin/marketplace.json`
+A public Claude Code plugin marketplace. The root `.claude-plugin/marketplace.json`
 is the catalog; every plugin is self-contained under `plugins/<name>/`. This guide is
 how to add or update one without breaking the others.
 
@@ -67,16 +67,16 @@ Avoid the push→pull round-trip while developing:
 
 ## Commit identity (keep it private)
 
-Commit under a **GitLab private noreply email** so no personal address enters history.
+Commit under a **GitHub noreply email** so no personal address enters history.
 Set it **repo-locally** (this repo already has it configured):
 
 ```bash
 git config --local user.name  "<handle>"
-git config --local user.email "<id>-<handle>@users.noreply.gitlab.com"
+git config --local user.email "<id>+<handle>@users.noreply.github.com"
 ```
 
-Find your own at GitLab → **Preferences → Profile → private commit email**. Never rely
-on the global identity here — it may carry a real name/email.
+Find your own at GitHub → **Settings → Emails → Keep my email addresses private**.
+Never rely on the global identity here — it may carry a real name/email.
 
 ## Line endings
 

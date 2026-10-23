@@ -5,7 +5,7 @@
     "name": "Try5t"
   },
   "metadata": {
-    "description": "Plugin Forge — a private marketplace of Claude Code plugins and agents."
+    "description": "Plugin Forge — a marketplace of Claude Code plugins and agents."
   },
   "plugins": [
     {

@@ -1,6 +1,6 @@
 # Plugin Forge
 
-A private marketplace of Claude Code plugins and agents.
+A marketplace of Claude Code plugins and agents.
 
 ## Plugins
 
@@ -14,8 +14,8 @@ A private marketplace of Claude Code plugins and agents.
 Add the marketplace once, then install any plugin from it:
 
 ```bash
-# Add the marketplace once (private GitLab repo):
-claude plugin marketplace add https://gitlab.com/Try5t/plugin-forge.git
+# Add the marketplace once:
+claude plugin marketplace add Try5t/plugin-forge
 
 # Then install either plugin:
 claude plugin install config-auditor@plugin-forge
