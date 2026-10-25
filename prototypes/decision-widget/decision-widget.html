@@ -1,0 +1,92 @@
+<style>
+.dw-opt{display:block;width:100%;text-align:left;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;margin:0 0 8px;cursor:pointer;font:inherit;color:var(--text-primary)}
+.dw-opt.on{border:2px solid var(--border-accent);padding:11px 13px;background:var(--bg-accent-muted)}
+.dw-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--surface-1);margin:8px 0 6px}
+.dw-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dw-tag{font-size:12px;color:var(--text-accent);margin-left:8px}
+.dw-tag.w{color:var(--text-warning)}
+.dw-small{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.dw-step{display:flex;align-items:center;gap:10px;font-size:14px;margin:6px 0}
+.dw-step button{width:32px;height:32px;padding:0}
+.dw-sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px}
+.dw-lab{font-size:12px;font-weight:500;color:var(--text-secondary);margin:0 0 2px}
+.dw-sec{margin:0 0 12px}
+.dw-link{display:flex;align-items:center;gap:8px;font-size:14px;min-height:32px}
+</style>
+<h2 class="sr-only">Decision widget with background and sources: what the decision changes, what it touches, links, and the options to pick.</h2>
+<div style="padding:0.5rem 0">
+<p style="margin:0 0 4px;font-size:16px;font-weight:500">How does a logistics player receive a convoy mission?</p>
+<p class="dw-small" style="margin:0 0 6px">Logistics players need one place to find and take convoy jobs. <span style="color:var(--text-muted)">From [ISSUE] · [AREA]</span></p>
+<button id="bgBtn" style="font-size:13px;margin:0 0 12px"><i class="ti ti-file-text" aria-hidden="true"></i> Background and sources <i class="ti ti-chevron-down" aria-hidden="true"></i></button>
+<div id="bg" style="display:none;background:var(--surface-1);border-radius:12px;padding:14px 16px;margin:0 0 14px">
+<div class="dw-sec"><p class="dw-lab">What this decides</p><p style="margin:0;font-size:14px;line-height:1.5">[Two or three sentences: what is missing today, who notices it in the game, what the pick changes.] Example: logistics players have no single place to find convoy jobs; the pick decides where they look.</p></div>
+<div class="dw-sec"><p class="dw-lab">What it touches</p><p style="margin:0;font-size:14px;line-height:1.5">Logistics players · F10 menus · kneeboard</p></div>
+<div class="dw-sec"><p class="dw-lab">Read more</p>
+<a class="dw-link" href="https://github.com/Try5t/salient/issues"><i class="ti ti-external-link" aria-hidden="true"></i> Issue [#NUMBER]: [ISSUE TITLE]</a>
+<a class="dw-link" href="https://github.com/Try5t/salient/blob/main/docs/concept.md"><i class="ti ti-external-link" aria-hidden="true"></i> Concept: [SECTION OF docs/concept.md]</a>
+<a class="dw-link" href="https://github.com/Try5t/salient/tree/main/docs/decisions"><i class="ti ti-external-link" aria-hidden="true"></i> Earlier decision: [REGISTER ENTRY]</a>
+</div>
+<div class="dw-small" style="border-top:0.5px solid var(--border);padding-top:10px"><i class="ti ti-message" aria-hidden="true"></i> Asked: “How much longer does the mission board take to build?” <span style="color:var(--text-muted)">→ answered in chat</span></div>
+</div>
+<div id="card" style="border:2px solid var(--border-accent);border-radius:12px;padding:14px 16px;margin:0 0 16px">
+<div class="dw-row"><span id="cHead" style="font-size:12px;font-weight:500"></span><span id="cScore" style="font-family:var(--font-mono);font-size:13px"></span></div>
+<p id="cLabel" style="margin:4px 0 8px;font-size:22px;font-weight:500"></p>
+<p style="margin:0 0 10px;font-size:14px;line-height:1.5"><span style="font-weight:500">Why:</span> <span id="cWhy"></span></p>
+<div style="background:var(--bg-warning);border-radius:var(--radius);padding:10px 12px;margin:0 0 10px">
+<span style="font-size:12px;font-weight:500;color:var(--text-warning)">Strongest argument against</span>
+<p id="cAgainst" style="margin:2px 0 0;font-size:14px;line-height:1.5"></p>
+</div>
+<p id="flip" class="dw-small" style="margin:0"><i class="ti ti-info-circle" aria-hidden="true"></i> <span></span></p>
+</div>
+<div class="dw-row" style="margin:0 0 8px"><span style="font-size:13px;font-weight:500;color:var(--text-secondary)">Your pick</span><span id="wnote" class="dw-small"></span></div>
+<div id="opts"></div>
+<div id="legend" class="dw-small" style="display:flex;gap:16px;margin:4px 0 12px"></div>
+<button id="wBtn" style="font-size:13px">Adjust weights <i class="ti ti-chevron-down" aria-hidden="true"></i></button>
+<div id="steps" style="display:none;margin:8px 0 0"></div>
+<div style="margin:16px 0 0">
+<label for="note" class="dw-small" style="display:block;margin:0 0 6px">Note or question (optional)</label>
+<textarea id="note" rows="2" style="width:100%;box-sizing:border-box" placeholder="Keep the F10 menu as a fallback"></textarea>
+<p id="err" style="display:none;font-size:13px;color:var(--text-danger);margin:4px 0 0">Type the question first.</p>
+<div style="display:flex;gap:8px;margin:10px 0 0">
+<button id="send" style="background:var(--fill-accent);color:var(--on-accent);border-color:var(--fill-accent)"></button>
+<button id="ask">Ask a question ↗</button>
+</div>
+</div>
+</div>
+<script>
+const Q='How does a logistics player receive a convoy mission?';
+const C=[{n:'Player fun',w:3},{n:'Build effort',w:2},{n:'Server load',w:1}];
+const O=[
+{l:'Mission board',p:[5,3,4],pro:'All open jobs at a glance',con:'Most UI work',why:'Best player fun (5 of 5) at moderate build effort; players see every open job at once.',against:'F10 menu: smallest build (5 of 5) and lightest on the server.'},
+{l:'F10 menu',p:[2,5,5],pro:'Smallest build, no new screen',con:'Deep menus, no overview',why:'Smallest build (5 of 5) and lightest on the server; no new screen to build.',against:'Mission board: far more fun for logistics players (5 against 2).'},
+{l:'Kneeboard',p:[4,2,4],pro:'Stays in the cockpit',con:'[UPDATE RATE]',why:'Good player fun (4 of 5) and the jobs stay in the cockpit.',against:'Mission board: more fun (5 against 4) and less build effort (3 against 2).'}];
+const REC=0,COL=['#185FA5','#378ADD','#85B7EB'];
+let w=C.map(c=>c.w),pick=REC;
+const tot=(o,ww=w)=>o.p.reduce((s,x,i)=>s+x*ww[i],0),mx=()=>5*w.reduce((a,b)=>a+b,0)||1;
+const changed=()=>w.some((x,i)=>x!==C[i].w);
+const leads=(i,ww)=>{const t=O.map(o=>tot(o,ww));return O.every((_,k)=>k===i||t[i]>t[k])};
+function flipLine(i){const t=O.map(o=>tot(o)),me=t[i],s=[...t].sort((a,b)=>b-a);
+let best=null;C.forEach((c,j)=>{for(let nw=0;nw<=10;nw++){if(nw===w[j])continue;const ww=w.slice();ww[j]=nw;const ok=leads(i,w)?!leads(i,ww):leads(i,ww);if(ok&&(!best||Math.abs(nw-w[j])<best.d)){best={j,nw,d:Math.abs(nw-w[j])}}}});
+if(leads(i,w)){const m=me-s[1];const b=best?' Holds unless '+C[best.j].n+' weighs '+best.nw+' or '+(best.nw>w[best.j]?'more':'less')+' (now '+w[best.j]+').':' Holds for every single weight from 0 to 10.';return['Leads by '+m+'.'+b,0]}
+const lead=t.indexOf(Math.max(...t));return[O[lead].l+' leads by '+(t[lead]-me)+'. '+(best?O[i].l+' would lead if '+C[best.j].n+' weighed '+best.nw+' or '+(best.nw>w[best.j]?'more':'less')+' (now '+w[best.j]+').':'No single weight change puts it ahead.'),1]}
+function draw(){const M=mx(),t=O.map(o=>tot(o)),lead=t.indexOf(Math.max(...t)),o=O[pick];
+const head=document.getElementById('cHead');head.textContent=pick===REC?'Claude recommends':'Your pick · Claude recommends '+O[REC].l;head.style.color=pick===REC?'var(--text-accent)':'var(--text-warning)';
+document.getElementById('card').style.borderColor=pick===REC?'var(--border-accent)':'var(--border-warning)';
+document.getElementById('cLabel').textContent=o.l;document.getElementById('cScore').textContent=t[pick]+' / '+M;
+document.getElementById('cWhy').textContent=o.why;document.getElementById('cAgainst').textContent=o.against;
+const f=flipLine(pick),fe=document.getElementById('flip');fe.lastElementChild.textContent=f[0];fe.style.color=f[1]?'var(--text-warning)':'';
+document.getElementById('opts').innerHTML=O.map((x,i)=>'<button class="dw-opt'+(i===pick?' on':'')+'" data-i="'+i+'"><div class="dw-row"><span style="font-size:15px;font-weight:500">'+x.l+(i===REC?'<span class="dw-tag">recommended</span>':changed()&&i===lead?'<span class="dw-tag w">leads with your weights</span>':'')+'</span><span style="font-family:var(--font-mono);font-size:13px">'+t[i]+' / '+M+'</span></div><div class="dw-bar">'+x.p.map((v,j)=>'<span style="width:'+(100*v*w[j]/M).toFixed(1)+'%;background:'+COL[j]+';margin-right:1px"></span>').join('')+'</div><div class="dw-small"><span style="color:var(--text-success)">+</span> '+x.pro+'<br><span style="color:var(--text-warning)">−</span> '+x.con+'</div></button>').join('');
+document.querySelectorAll('.dw-opt').forEach(b=>b.onclick=()=>{pick=+b.dataset.i;draw()});
+document.getElementById('wnote').textContent=changed()?'with your weights':"with Claude's weights";
+document.getElementById('steps').innerHTML=C.map((c,i)=>'<div class="dw-step"><span class="dw-sw" style="background:'+COL[i]+'"></span><span style="width:120px">'+c.n+'</span><button data-d="-1" data-i="'+i+'" aria-label="Lower">−</button><span style="width:32px;text-align:center;font-family:var(--font-mono)">×'+w[i]+'</span><button data-d="1" data-i="'+i+'" aria-label="Raise">+</button>'+(w[i]!==c.w?'<span class="dw-small">Claude ×'+c.w+'</span>':'')+'</div>').join('')+(changed()?'<button id="reset" style="font-size:13px;margin-top:4px">Reset to Claude\'s weights</button>':'');
+document.querySelectorAll('#steps button[data-d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;w[i]=Math.max(0,Math.min(10,w[i]+ +b.dataset.d));draw()});
+const rs=document.getElementById('reset');if(rs)rs.onclick=()=>{w=C.map(c=>c.w);draw()};
+document.getElementById('send').textContent=(pick===REC?'Accept ':'Send ')+o.l+(changed()?' + weights':'')+' ↗'}
+document.getElementById('legend').innerHTML=C.map((c,i)=>'<span><span class="dw-sw" style="background:'+COL[i]+'"></span> '+c.n+'</span>').join('');
+const tg=(btn,el,a,b,icon)=>{const B=document.getElementById(btn),E=document.getElementById(el);B.onclick=()=>{const op=E.style.display==='none';E.style.display=op?'block':'none';B.innerHTML=(icon?'<i class="ti '+icon+'" aria-hidden="true"></i> ':'')+(op?b:a)+' <i class="ti ti-chevron-'+(op?'up':'down')+'" aria-hidden="true"></i>'}};
+tg('wBtn','steps','Adjust weights','Hide weights');tg('bgBtn','bg','Background and sources','Hide background','ti-file-text');
+const note=document.getElementById('note'),err=document.getElementById('err');note.oninput=()=>err.style.display='none';
+document.getElementById('send').onclick=()=>{let s='Decision "'+Q+'": '+O[pick].l+'.';if(changed()){const ch=C.flatMap((c,i)=>w[i]===c.w?[]:[c.n+' '+c.w+'→'+w[i]]);const rk=O.map(x=>[x.l,tot(x)]).sort((a,b)=>b[1]-a[1]);s+=' Changed weights: '+ch.join(', ')+'; with them: '+rk.map(r=>r[0]+' '+r[1]).join(', ')+'.'}if(note.value.trim())s+=' Note: '+note.value.trim();sendPrompt(s)};
+document.getElementById('ask').onclick=()=>{if(!note.value.trim()){err.style.display='block';return}sendPrompt('Question on decision "'+Q+'": '+note.value.trim())};
+draw();
+</script>
